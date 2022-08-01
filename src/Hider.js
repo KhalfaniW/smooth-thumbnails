@@ -20,19 +20,21 @@ function Hider({
   grayScale = true,
   maxBlur = 8,
 }) {
+  const recommendationContent =
+    recommendationElement.querySelector("div#content");
   const thumbnailElement = recommendationElement.querySelector("img#img");
   const detailsElement = recommendationElement.querySelector("div#details");
 
-  const [thumbnailHoverEnabled, setThumbnailHoverEnabled] = useState(false);
+  const [isThumbnailHoverEnabled, setIsThumbnailHoverEnabled] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [currentBlur, setCurrentBlur] = useState(8);
   const [isHidden, setIsHidden] = useState(true);
   const [imageSource, setImageSource] = useState(null);
-  const [isThumbnailHoveringEnabled, setIsThumbnailHoveringEnabled] =
-    useState(null);
+  const [isHoveringOverDetails, setIsHoveringOverDetails] = useState(false);
+  const [isHoveringOverThumbnail, setIsHoveringOverThumbnail] = useState(false);
 
   const thumbnailRef = useRef(null);
-  //opacity is !important becuase all thumbnails it will be hidden by defautl to allow custom hidding before initial view
+  //opacity is !important because all thumbnails it will be hidden by default to allow custom hiding before initial view
   const transition = initialized && " transition: all 200ms;";
   const other = "transition: all ${initialized? 1000: 0}ms;";
   const imgClass = css`
@@ -41,86 +43,104 @@ function Hider({
     position: relative;
     z-index: 3;
   `;
+  // if the blur and opacity is high the blur animation will be glitched
   const hidden = css`
-    ${hide && "opacity: 0; !important"};
-    filter: blur(${blur ? currentBlur : 0}px) ${grayScale && "grayScale(100%)"};
+    ${hide && "opacity: .5;"};
+    filter: blur(${blur ? 5 : 0}px) ${grayScale && "grayScale(100%)"};
     transition: all ${initialized ? 400 : 0}ms;
   `;
 
   const visible = css`
-    opacity: 1; !important;
-    transition: all 400ms;C
+    opacity: 1;
+    transition: all 400ms;
   `;
 
-  // need to delay thumnail cancelation becuase onmouseleave runs while its still in the bounding box
-  // const cancelThumbnailDeactivationOverThumbnail = useTimeout(
-  //   () => {
-  //     if (isHoveringOverThumbnail) {
-  //       setIsThumbnailHoveringEnabled(true);
-  //     } else {
-  //       set isThumbnailHoveringEnabled1(false);
-  //       setIsHidden(true);
-  //     }
-  //     console.log({isHoveringOverThumbnail, isHidden});
-  //   },
-  //   isThumbnailHoveringEnabled1 ? 50 : null,
-  // );
   const {clientX, clientY} = useMouse();
+  //Watch this value to recalculate on scroll
+  const reccomendationScrollPosition =
+    recommendationElement.getBoundingClientRect().top;
 
-  function getIsInBoundingBox(x, y, element) {
-    // use bounding rect because hovering is canceled when hovering on elements inside box
-    const boundingRect = element.getBoundingClientRect();
-    return (
-      boundingRect.x <= x &&
-      x <= boundingRect.x + boundingRect.width &&
-      boundingRect.y <= y &&
-      y <= boundingRect.y + boundingRect.height
+  useEffect(() => {
+    function getIsInBoundingBox(x, y, element) {
+      // use bounding rect because hovering is canceled when hovering on elements inside box
+      const boundingRect = element.getBoundingClientRect();
+      return (
+        boundingRect.x <= x &&
+        x <= boundingRect.x + boundingRect.width &&
+        boundingRect.y <= y &&
+        y <= boundingRect.y + boundingRect.height
+      );
+    }
+    const isHoveringOverRecommendation = getIsInBoundingBox(
+      clientX,
+      clientY,
+      recommendationContent,
     );
-  }
-  const isHoveringOverDetails = getIsInBoundingBox(
-    clientX,
-    clientY,
-    detailsElement,
-  );
-  const isHoveringOverThumbnail =
-    thumbnailRef.current &&
-    getIsInBoundingBox(clientX, clientY, thumbnailRef.current);
+    const isCurrentHoveringOverThumbnail =
+      isHoveringOverRecommendation && !isHoveringOverDetails;
+    setIsHoveringOverDetails((prevHoveringOverDetails) => {
+      const isCurrentHoveringOverDetails = getIsInBoundingBox(
+        clientX,
+        clientY,
+        detailsElement,
+      );
 
-  const cancelThumbnailHoverDeactivation = useTimeout(
-    () => {
-      if (!isHoveringOverThumbnail) setIsThumbnailHoveringEnabled(false);
-    },
-    isThumbnailHoveringEnabled ? 500 : null,
-  );
-  useEffect(() => {
-    //this should only change if it was true and now is false
-    if (!isHoveringOverDetails) setIsThumbnailHoveringEnabled(true);
+      if (index == 0) {
+        window.data2 = {
+          prevHoveringOverDetails,
+          isCurrentHoveringOverDetails,
+          isCurrentHoveringOverThumbnail,
+          isThumbnailHoverEnabled,
+        };
+        window.debugData = {
+          recommendationContent,
+          thumbnailElement,
+          recommendationElement,
+          thumbnailRef,
+        };
+      }
+      if (prevHoveringOverDetails && !isCurrentHoveringOverDetails) {
+        setIsThumbnailHoverEnabled(true);
+      }
+      return isCurrentHoveringOverDetails;
+    });
+    setIsHoveringOverThumbnail((prevHoveringThumbnail) => {
+      const isCurrentHoveringOverThumbnail =
+        getIsInBoundingBox(clientX, clientY, recommendationContent) &&
+        !isHoveringOverDetails;
 
-    setIsHidden(!isHoveringOverDetails);
-    // eslint-disable-next-line
-  }, [isHoveringOverDetails]);
+      if (prevHoveringThumbnail && !isCurrentHoveringOverThumbnail)
+        setIsThumbnailHoverEnabled(false);
 
-  useEffect(() => {
-    if (isThumbnailHoveringEnabled) {
-      cancelThumbnailHoverDeactivation();
+      return isCurrentHoveringOverThumbnail;
+    });
+    if (!isHoveringOverRecommendation) {
+      setIsHidden(true);
+      return;
+    }
+    if (
+      isHoveringOverDetails ||
+      (isHoveringOverThumbnail && isThumbnailHoverEnabled)
+    ) {
       setIsHidden(false);
     }
-    if (!isHoveringOverThumbnail && !isHoveringOverDetails)
-      setIsThumbnailHoveringEnabled(false);
+  }, [clientX, clientY, reccomendationScrollPosition]);
 
-    setIsHidden(
-      !isHoveringOverDetails &&
-        !(isHoveringOverThumbnail && isThumbnailHoveringEnabled),
-    );
-    // eslint-disable-next-line
-  }, [isHoveringOverThumbnail]);
+  if (index == 0)
+    window.data = {
+      index,
+      isHoveringOverDetails,
+      isHoveringOverThumbnail,
+      isThumbnailHoverEnabled,
+      isHidden,
+    };
 
+  const thumbnailImageSource =
+    recommendationElement.querySelector("#thumbnail img#img").src;
   useEffect(() => {
-    const thumbnailElement =
-      recommendationElement.querySelector("#thumbnail img#img");
-    setImageSource(thumbnailElement.src);
+    setImageSource(thumbnailImageSource);
     setInitialized(true);
-  }, []);
+  }, [thumbnailImageSource]);
 
   const hider = css`
     position: absolute;
@@ -128,24 +148,28 @@ function Hider({
      z-index: 99999;
     text-align: center;
 }`;
+  let disableThumbnailHover = css``;
+  if (isHidden && thumbnailRef.current) {
+    const thumbnailBoundingRectangle =
+      thumbnailRef.current.getBoundingClientRect();
+    disableThumbnailHover = css`
+    top: ${thumbnailBoundingRectangle.top}px;
+    left: ${thumbnailBoundingRectangle.left}px;
+    height: ${thumbnailBoundingRectangle.height}px;
+    width: ${thumbnailBoundingRectangle.width}px;
+    position: fixed;
+    z-index: 3;
+    }`;
+  }
+
   return (
     <>
-      {isThumbnailHoveringEnabled &&
-        createPortal(
-          <div
-            className={cx(hider, {[hoverDisabled]: !thumbnailHoverEnabled})}
-            onMouseEnter={() => {
-              cancelThumbnailHoverDeactivation();
-
-              setIsHidden(false);
-            }}
-            onMouseLeave={() => {
-              /* setThumbnailHoverEnabled(false); */
-              /* setIsThumbnailHoveringEnabled(false); */
-            }}
-          ></div>,
-          thumbnailElement.parentNode,
-        )}
+      {isHidden && (
+        <div
+          onClick={() => thumbnailElement.click()}
+          className={disableThumbnailHover}
+        />
+      )}
       {createPortal(
         <img
           ref={thumbnailRef}
