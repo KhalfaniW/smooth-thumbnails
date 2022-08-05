@@ -18,7 +18,8 @@
   "scripts": {
     "start": "REACT_APP_ENVIRONMENT=DEV PORT=4000 react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
-    "bundle": "parcel build src/index.js --no-source-maps; parcel build --no-source-maps src/removeApp.js",
+    "bundle": "NODE_ENV=development parcel build src/index.js --no-optimize --no-source-maps; parcel build --no-source-maps src/toggleApp/*",
+    "bundle:prod": "parcel build src/index.js --no-source-maps; parcel build --no-source-maps src/removeApp.js",
     "bundleAndCopy": "npm run bundle;  xclip -sel clip dist/index.js  ",
     "bundleAndServe": "npm run bundle; npm run serve",
     "serve": "PORT=4200 serve -s dist",

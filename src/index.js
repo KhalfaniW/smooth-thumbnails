@@ -6,15 +6,9 @@ import App from "./App";
 const containerId = "SMOOTH_INJECT_APP";
 
 function init() {
-  const alreadInitialized = Boolean(document.getElementById(containerId));
-  const isNotInHomepage = !(
-    window.location.hostname === "www.youtube.com" &&
-    window.location.pathname === "/"
-  );
- 
-  const isDisabled =
-    isNotInHomepage && process.env.REACT_APP_ENVIRONMENT.slice(0, 3) !== "DEV";
-  if (isDisabled) return;
+  const alreadyInitialized = Boolean(document.getElementById(containerId));
+
+  if (alreadyInitialized) return;
   let rootElement = document.createElement("div");
 
   rootElement.id = containerId;
