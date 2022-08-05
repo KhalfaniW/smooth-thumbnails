@@ -43,6 +43,7 @@ function Hider({
     position: relative;
     z-index: 3;
   `;
+
   // if the blur and opacity is high the blur animation will be glitched
   const hidden = css`
     ${hide && "opacity: .5;"};
@@ -61,7 +62,7 @@ function Hider({
     recommendationElement.getBoundingClientRect().top;
 
   useEffect(() => {
-    function getIsInBoundingBox(x, y, element) {
+    function isInBoundingBox(x, y, element) {
       // use bounding rect because hovering is canceled when hovering on elements inside box
       const boundingRect = element.getBoundingClientRect();
       return (
@@ -71,7 +72,7 @@ function Hider({
         y <= boundingRect.y + boundingRect.height
       );
     }
-    const isHoveringOverRecommendation = getIsInBoundingBox(
+    const isHoveringOverRecommendation = isInBoundingBox(
       clientX,
       clientY,
       recommendationContent,
@@ -79,26 +80,12 @@ function Hider({
     const isCurrentHoveringOverThumbnail =
       isHoveringOverRecommendation && !isHoveringOverDetails;
     setIsHoveringOverDetails((prevHoveringOverDetails) => {
-      const isCurrentHoveringOverDetails = getIsInBoundingBox(
+      const isCurrentHoveringOverDetails = isInBoundingBox(
         clientX,
         clientY,
         detailsElement,
       );
 
-      if (index == 0) {
-        window.data2 = {
-          prevHoveringOverDetails,
-          isCurrentHoveringOverDetails,
-          isCurrentHoveringOverThumbnail,
-          isThumbnailHoverEnabled,
-        };
-        window.debugData = {
-          recommendationContent,
-          thumbnailElement,
-          recommendationElement,
-          thumbnailRef,
-        };
-      }
       if (prevHoveringOverDetails && !isCurrentHoveringOverDetails) {
         setIsThumbnailHoverEnabled(true);
       }
@@ -106,7 +93,7 @@ function Hider({
     });
     setIsHoveringOverThumbnail((prevHoveringThumbnail) => {
       const isCurrentHoveringOverThumbnail =
-        getIsInBoundingBox(clientX, clientY, recommendationContent) &&
+        isInBoundingBox(clientX, clientY, recommendationContent) &&
         !isHoveringOverDetails;
 
       if (prevHoveringThumbnail && !isCurrentHoveringOverThumbnail)
@@ -138,6 +125,11 @@ function Hider({
   const thumbnailImageSource =
     recommendationElement.querySelector("#thumbnail img#img").src;
   useEffect(() => {
+    if (
+      typeof thumbnailImageSource !== "string" ||
+      thumbnailImageSource.length < 5
+    )
+      return;
     setImageSource(thumbnailImageSource);
     setInitialized(true);
   }, [thumbnailImageSource]);

@@ -17,10 +17,14 @@ function Thumbnails() {
     }
     `;
     var styleSheet = document.createElement("style");
+    styleSheet.id = "thumbnailEditStyles";
     styleSheet.innerText = hideThumbnailsCss;
     document.head.appendChild(styleSheet);
 
-    return () => clearInterval(interval);
+    return () => {
+      document.getElementById("thumbnailEditStyles").remove();
+      clearInterval(interval);
+    };
   }, []);
 
   return recommendations.map((recommendation, index) => {
@@ -28,12 +32,10 @@ function Thumbnails() {
 
     return thumbnail?.href ? (
       <Hider
-        key={thumbnail.href}
+        // the order will not change so key=index is not a problem
+        key={thumbnail.href + index}
         index={index}
         recommendationElement={recommendation}
-        onLoad={() => {
-          
-        }}
       />
     ) : null;
   });

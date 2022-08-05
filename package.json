@@ -16,11 +16,11 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "PORT=4000 react-scripts start",
+    "start": "REACT_APP_ENVIRONMENT=DEV PORT=4000 react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
-    "bundle": "parcel build src/index.js --no-source-maps",
-    "bundle2": "parcel build src/index.js --no-source-maps; xclip -sel clip dist/index.js  ",
-    "bundle3": "npm run bundle; npm run serve",
+    "bundle": "parcel build src/index.js --no-source-maps; parcel build --no-source-maps src/removeApp.js",
+    "bundleAndCopy": "npm run bundle;  xclip -sel clip dist/index.js  ",
+    "bundleAndServe": "npm run bundle; npm run serve",
     "serve": "PORT=4200 serve -s dist",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "parcel": "^2.6.2",
+    "process": "^0.11.10",
     "serve": "^14.0.1"
   }
 }
