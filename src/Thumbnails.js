@@ -12,7 +12,7 @@ function Thumbnails() {
       );
     }, 500);
 
-    var hideThumbnailsCss = `#thumbnail img#img{
+      var hideThumbnailsCss = `ytd-rich-grid-renderer #thumbnail img#img{
       display: none;
     }
     `;
@@ -29,7 +29,6 @@ function Thumbnails() {
 
   return recommendations.map((recommendation, index) => {
     const thumbnail = recommendation.querySelector("a#thumbnail");
-
     return thumbnail?.href ? (
       <Hider
         // the order will not change so key=index is not a problem

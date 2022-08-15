@@ -5,18 +5,8 @@ function App() {
   const [enabled, setEnabled] = useState(true);
   const [canceled, setCanceled] = useState(false);
 
-  const handleUrlChange = () => {
-    const isInHomepage =
-      window.location.hostname === "www.youtube.com" &&
-      window.location.pathname === "/";
-
-    setEnabled(
-      isInHomepage || process.env.REACT_APP_ENVIRONMENT?.slice(0, 3) === "DEV",
-    );
-  };
 
   useEffect(() => {
-    handleUrlChange();
     const handleCancel = () => {
       console.log("Canceled Thumbnails");
       setCanceled(true);
@@ -49,7 +39,7 @@ function App() {
     return () => observer.disconnect();
   }, []);
 
-  return enabled && !canceled && <Thumbnails />;
+  return  !canceled && <Thumbnails />;
 }
 
 export default App;
